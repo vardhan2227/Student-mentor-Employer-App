@@ -1,0 +1,533 @@
+---
+title: "student mentor employer demo app"
+author: "sai vardhan reddy"
+date: "2024-04-12"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#1. Motivation and Overview:
+#The project aims to develop an authentication app using the Shiny framework in R. The motivation behind this project is to create a secure and user-friendly platform for user authentication, with additional features such as user profile management, connection tracking, messaging, job board, and more.
+
+#2. Related Work:
+#The development of this authentication app was inspired by various resources, including Shiny documentation, online tutorials, and best practices in web development and security protocols. Additionally, concepts from courses on web application development and data security have influenced the design and implementation of this project.
+
+#3.Initial Questions:
+#Initially, the primary question was how to create a secure authentication system using Shiny in R. As the project progressed, additional questions arose, such as how to implement user profile management, connection tracking, and messaging functionalities while ensuring data privacy and security.
+
+#4. Data:
+#The dataset used in this project consists of user credentials stored in-memory as a dataframe. The data includes usernames and hashed passwords for authentication purposes. Data import and manipulation are done directly within the Shiny application.
+
+#5. Exploratory Data Analysis:
+#As the project primarily focuses on application development rather than traditional data analysis, the exploratory data analysis phase mainly involves examining the structure and content of the user data dataframe. Visualization techniques are not extensively utilized in this context.
+
+#6. Data Analysis:
+#The statistical and computational methods employed in this project revolve around user authentication, validation, and management processes. Techniques such as password hashing, username validation, and user registration are central to the functionality of the authentication app.
+
+# code for ("DEMO APP OF STUDENT MENTOR AND EMPLOYER") AND EXPLANATION.
+
+```{r}
+library(shiny)
+
+
+```
+#This line imports the Shiny library, which is necessary for building interactive web applications in R.
+
+```{r}
+users <- data.frame(
+  username = c("user1", "user2", "user3"),
+  password = c("password1", "password2", "password3"),
+  stringsAsFactors = FALSE
+)
+```
+#Here, a data frame users is created to store user credentials. In a real-world scenario, this data would be stored securely, potentially in a database.
+
+```{r}
+login_ui <- fluidPage(
+  tags$style(HTML('
+    body {
+      background-image: url("https://railsware.com/blog/wp-content/uploads/2019/07/Why-we-use-ReactJS-for-our-projects-Illustration.jpg");
+      background-size: cover;
+    }
+  ')),
+  titlePanel("Login"),
+  HTML("<style>#login-error { color: red; }</style>"),
+  div(
+    style = "display: flex; align-items: center; justify-content: center; height: 100vh;",
+    div(
+      style = "width: 300px; background-color: rgba(255, 255, 255, 0.8); padding: 20px;",
+      textInput("username", "Username:"),
+      passwordInput("password", "Password:"),
+      actionButton("login", "Log In"),
+      p(id = "login-error", "")
+    )
+  )
+)
+```
+#This code block defines the UI layout for the login page of the Shiny application. It sets a background image using custom CSS, creates input fields for username and password, a button for logging in, and a paragraph element to display any login error messages. The layout is centered both vertically and horizontally on the page.
+
+```{r}
+signup_ui <- fluidPage(
+  tags$style(HTML('
+    body {
+      background-image: url("https://railsware.com/blog/wp-content/uploads/2019/07/Why-we-use-ReactJS-for-our-projects-Illustration.jpg");
+      background-size: cover;
+    }
+  ')),
+  titlePanel("Sign Up"),
+  div(
+    style = "display: flex; align-items: center; justify-content: center; height: 100vh;",
+    div(
+      style = "width: 300px; background-color: rgba(255, 255, 255, 0.8); padding: 20px;",
+      textInput("new_username", "New Username:"),
+      passwordInput("new_password", "New Password:"),
+      actionButton("signup", "Sign Up"),
+      p(id = "signup-message", "")
+    )
+  )
+)
+```
+#This code block defines the UI layout for the sign-up page of the Shiny application. It sets a background image using custom CSS, creates input fields for new username and password, a button for signing up, and a paragraph element to display any sign-up success or error messages. The layout is centered both vertically and horizontally on the page.
+
+```{r}
+login_server <- function(input, output, session) {
+  observeEvent(input$login, {
+    # Check if username and password match
+    user <- users[users$username == input$username, ]
+    if (nrow(user) == 0 || user$password != input$password) {
+      updateTextInput(session, "username", value = "")
+      updateTextInput(session, "password", value = "")
+      updateParagraph(session, "login-error", "Invalid username or password.")
+    } else {
+      # If successful login, navigate to the About Us tab
+      updateTabsetPanel(session, "auth_tabs", selected = "About Us")
+      # For simplicity, let's just print a success message here
+      print("Login successful!")
+    }
+  })
+}
+```
+#This code block defines the server logic for handling the login process in the Shiny application. It listens for the event triggered by clicking the login button. When the event occurs, it checks if the entered username exists in the users dataset and if the corresponding password matches the input password. If the credentials are invalid, it clears the input fields and displays an error message. If the login is successful, it navigates to the "About Us" tab and prints a success message (for demonstration purposes).
+
+```{r}
+signup_server <- function(input, output, session) {
+  observeEvent(input$signup, {
+    # Check if username already exists
+    if (input$new_username %in% users$username) {
+      updateTextInput(session, "new_username", value = "")
+      updatePasswordInput(session, "new_password", value = "")
+      updateParagraph(session, "signup-message", "Username already exists. Please choose another one.")
+    } else {
+      # If username is unique, add new user
+      new_user <- data.frame(username = input$new_username, password = input$new_password, stringsAsFactors = FALSE)
+      users <<- rbind(users, new_user)
+      updateParagraph(session, "signup-message", "Sign up successful! You can now log in.")
+      
+      # Switch to the Login tab
+      updateTabsetPanel(session, "auth_tabs", selected = "Login")
+    }
+  })
+}
+```
+#This code block defines the server logic for handling the sign-up process in the Shiny application. It listens for the event triggered by clicking the sign-up button. When the event occurs, it checks if the entered username already exists in the users dataset. If the username already exists, it clears the input fields and displays a message indicating that the username is already taken. If the username is unique, it creates a new user with the entered username and password, adds it to the users dataset, displays a message indicating successful sign-up, and switches to the Login tab for the user to log in.
+
+```{r}
+ui <- navbarPage(
+  "Authentication App",
+  id = "auth_tabs",
+  selected = "Login", # Set the initial tab as "Login"
+  tabPanel("Login", login_ui),
+  tabPanel("Sign Up", signup_ui),
+  tabPanel("My Profile", 
+           fluidPage(
+             h1("My Profile", align = "center"),
+             h3("Basic Resume Form", align = "center"),
+             br(),
+             fluidRow(
+               column(6, textInput("name", "Name:")),
+               column(6, textInput("email", "Email:"))
+             ),
+             fluidRow(
+               column(6, textInput("phone", "Phone Number:")),
+               column(6, textInput("education", "Education:"))
+             ),
+             fluidRow(
+               column(6, textInput("experience", "Experience:")),
+               column(6, textInput("skills", "Skills:"))
+             ),
+             fluidRow(
+               column(12, actionButton("submit_resume", "Submit"))
+             )
+           )
+  ),
+  tabPanel("My Connections", 
+           fluidPage(
+             h1("My Connections", align = "center"),
+             h3("Friend Connections", align = "center"),
+             br(),
+             fluidRow(
+               column(4, verbatimTextOutput("friend1")),
+               column(4, verbatimTextOutput("friend2")),
+               column(4, verbatimTextOutput("friend3"))
+             ),
+             h3("Mentor Connections", align = "center"),
+             br(),
+             fluidRow(
+               column(4, verbatimTextOutput("mentor1")),
+               column(4, verbatimTextOutput("mentor2")),
+               column(4, verbatimTextOutput("mentor3"))
+             ),
+             h3("Employer Connections", align = "center"),
+             br(),
+             fluidRow(
+               column(4, verbatimTextOutput("employer1")),
+               column(4, verbatimTextOutput("employer2")),
+               column(4, verbatimTextOutput("employer3"))
+             ),
+             br(),
+             fluidRow(
+               column(12, plotOutput("user_role_plot"))
+             )
+           )
+  ),
+  tabPanel("My Messages", 
+           fluidPage(
+             h1("My Messages", align = "center"),
+             h3("Messages from Employers", align = "center"),
+             br(),
+             fluidRow(
+               column(12, verbatimTextOutput("employer_msg1")),
+               column(12, verbatimTextOutput("employer_msg2")),
+               column(12, verbatimTextOutput("employer_msg3"))
+             ),
+             h3("Messages from Mentors", align = "center"),
+             br(),
+             fluidRow(
+               column(12, verbatimTextOutput("mentor_msg1")),
+               column(12, verbatimTextOutput("mentor_msg2")),
+               column(12, verbatimTextOutput("mentor_msg3"))
+             )
+           )
+  ),
+  tabPanel("Search Page", 
+           fluidPage(
+             h1("Search Page", align = "center"),
+             br(),
+             fluidRow(
+               column(12, textInput("search_query", "Search for companies or profiles:")),
+               column(12, uiOutput("search_results"))
+             )
+           )
+  ),
+  tabPanel("Job Board", 
+           fluidPage(
+             h1("Job Board", align = "center"),
+             h3("Apply for a Job", align = "center"),
+             br(),
+             fluidRow(
+               column(6, textInput("job_title", "Job Title:")),
+               column(6, textInput("company", "Company:"))
+             ),
+             fluidRow(
+               column(6, fileInput("resume", "Upload Resume/CV:")),
+               column(6, textInput("name", "Your Name:"))
+             ),
+             fluidRow(
+               column(6, textInput("email", "Your Email:")),
+               column(6, textInput("skills", "Skills:"))
+             ),
+             fluidRow(
+               column(6, textInput("experience", "Experience:")),
+               column(6, textInput("cover_letter", "Cover Letter:"))
+             ),
+             fluidRow(
+               column(12, actionButton("apply_job", "Apply"))
+             )
+           )
+  ),
+  tabPanel("About Us", 
+           fluidPage(
+             h1("About Us", align = "center"),
+             br(),
+             fluidRow(
+               column(6,
+                      tags$div(
+                        HTML("
+                              <h3>Disclaimer</h3>
+                              <p>The Business Platform (&quot;the Platform&quot;) is provided for informational and networking purposes only. By accessing and using the Platform, you agree to comply with and be bound by the following disclaimer:</p>
+                              <p><strong>Accuracy of Information:</strong> While we strive to ensure the accuracy and reliability of the information provided on the Platform, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability, or availability of the information, products, services, or related graphics contained on the Platform for any purpose. Any reliance you place on such information is strictly at your own risk.</p>
+                              <p><strong>User Responsibility:</strong> Users of the Platform are solely responsible for verifying the accuracy, completeness, and suitability of any information provided on the Platform. Users should exercise due diligence and seek professional advice where necessary before making any decisions based on the information provided.</p>
+                              <p><strong>Networking and Communication:</strong> The Platform serves as a common networking and communication platform for students, mentors, and employers. While we endeavor to facilitate meaningful connections and interactions, we do not guarantee the availability, competence, or reliability of any user or entity participating on the Platform. Users are encouraged to conduct their own assessments and exercises caution when engaging with others on the Platform.</p>
+                              <p><strong>No Endorsement:</strong> The inclusion of any user profiles, job listings, mentorship opportunities, or other content on the Platform does not imply endorsement or recommendation by us. We do not endorse, sponsor, or approve any user-generated content and cannot be held responsible for the views or actions of individual users.</p>
+                              <p><strong>Limitation of Liability:</strong> In no event will we be liable for any loss or damage, including without limitation, indirect or consequential loss or damage, or any loss or damage whatsoever arising from loss of data or profits arising out of, or in connection with, the use of the Platform.</p>
+                              <p><strong>Modification of Terms:</strong> We reserve the right to modify, update, or amend this disclaimer at any time without prior notice. It is the responsibility of users to review this disclaimer periodically for any changes.</p>
+                              <p>By accessing and using the Platform, you acknowledge that you have read, understood, and agree to be bound by this disclaimer.</p>
+                              ")
+                      )),
+               column(6, plotOutput("user_role_plot"))
+             )
+           )
+  ),
+  tabPanel("Mentor Support",
+           fluidPage(
+             h1("Mentor Support", align = "center"),
+             h3("Basic Resume Form", align = "center"),
+             br(),
+             fluidRow(
+               column(6, textInput("mentor_name", "Mentor's Name:")),
+               column(6, textInput("mentor_email", "Mentor's Email:"))
+             ),
+             fluidRow(
+               column(12, actionButton("submit_mentor_request", "Submit Mentor Request"))
+             )
+           )
+  )
+)
+
+css <- "
+.ui-navbar li:last-child {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+}
+"
+
+
+```
+#code defines the user interface (UI) for an authentication app using Shiny, a web application framework for R. Here's a breakdown of the code:
+
+#NavbarPage: This creates a navigation bar with multiple tabs. The title of the navbar is set to "Authentication App". The id parameter assigns an identifier to the navbar, and the selected parameter specifies the initial tab to be displayed when the app loads.
+
+#Tab Panels:
+
+#"Login" Tab: Displays a login form created using login_ui.
+#"Sign Up" Tab: Displays a sign-up form created using signup_ui.
+#"My Profile" Tab: Contains a form for users to fill in their basic resume information such as name, email, phone number, education, experience, and skills. It also includes a button to submit the form.
+#"My Connections" Tab: Displays information about the user's connections, including friends, mentors, and employers. It also includes a plot showing the user's role.
+#"My Messages" Tab: Shows messages from employers and mentors.
+#"Search Page" Tab: Allows users to search for companies or profiles.
+#"Job Board" Tab: Allows users to apply for a job by providing job title, company, resume, name, email, skills, experience, and a cover letter.
+#"About Us" Tab: Displays information about the platform, including a disclaimer.
+#"Mentor Support" Tab: Provides a form for users to request mentor support by entering the mentor's name and email.
+#Fluid Pages: Each tab panel contains a fluid page, which adapts to different screen sizes.
+
+#UI Components:
+
+#Headings and Subheadings: Used to organize and label different sections.
+#Input Fields: Text input fields (textInput) are used for users to enter various information such as name, email, etc. Password input fields (passwordInput) are used for entering passwords. File input (fileInput) is used for uploading resumes.
+#Action Buttons: actionButton is used to trigger actions such as form submission.
+#Text Outputs: verbatimTextOutput is used to display text output.
+#Plots: plotOutput is used to display plots.
+#HTML Content: tags$div is used to embed HTML content, particularly for displaying the disclaimer in the "About Us" tab.
+#Overall, this code defines a comprehensive UI for an authentication app, allowing users to login, sign up, manage their profile, view connections and messages, search for information, apply for jobs, and access platform information.
+```{r}
+css <- "
+.ui-navbar li:last-child {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+}
+"
+```
+#This CSS code snippet styles the last tab in a navbar to be fixed at the bottom-left corner of the browser window, ensuring it remains visible even when scrolling down the page.
+
+```{r}
+server <- function(input, output, session) {
+  # Generate dummy connections data
+  output$friend1 <- renderText({
+    "Friend 1: John Doe"
+  })
+  output$friend2 <- renderText({
+    "Friend 2: Jane Smith"
+  })
+  output$friend3 <- renderText({
+    "Friend 3: Alex Johnson"
+  })
+  output$mentor1 <- renderText({
+    "Mentor 1: Sarah Lee"
+  })
+  output$mentor2 <- renderText({
+    "Mentor 2: Michael Brown"
+  })
+  output$mentor3 <- renderText({
+    "Mentor 3: Emily Davis"
+  })
+  output$employer1 <- renderText({
+    "Employer 1: Company X"
+  })
+  output$employer2 <- renderText({
+    "Employer 2: Company Y"
+  })
+  output$employer3 <- renderText({
+    "Employer 3: Company Z"
+  })
+  
+  # Generate dummy messages from employers
+  output$employer_msg1 <- renderText({
+    "Message 1 from Employer: We are pleased to inform you that your application has been shortlisted."
+  })
+  output$employer_msg2 <- renderText({
+    "Message 2 from Employer: Could you please provide additional details about your work experience?"
+  })
+  output$employer_msg3 <- renderText({
+    "Message 3 from Employer: Unfortunately, your application was not successful at this time."
+  })
+  
+  # Generate dummy messages from mentors
+  output$mentor_msg1 <- renderText({
+    "Message 1 from Mentor: Congratulations on your recent achievements!"
+  })
+  output$mentor_msg2 <- renderText({
+    "Message 2 from Mentor: I have reviewed your resume and have some suggestions for improvement."
+  })
+  output$mentor_msg3 <- renderText({
+    "Message 3 from Mentor: Let's schedule a meeting to discuss your career goals."
+  })
+  
+  # Dummy search results
+  output$search_results <- renderUI({
+    search_results <- c("Company A", "Company B", "Company C", "Profile 1", "Profile 2", "Profile 3")
+    if (!is.null(input$search_query) && input$search_query != "") {
+      search_results <- grep(input$search_query, search_results, value = TRUE, ignore.case = TRUE)
+    }
+    if (length(search_results) > 0) {
+      tags$ul(
+        lapply(search_results, function(result) {
+          tags$li(result)
+        })
+      )
+    } else {
+      "No results found."
+    }
+  })
+  
+  # Generate the user role distribution plot
+  output$user_role_plot <- renderPlot({
+    # Generate some dummy data for the plot
+    years <- seq(2020, 2025)
+    users_count <- c(100, 150, 200, 250, 300, 350)  # Just dummy numbers for illustration
+    
+    # Plotting
+    plot(years, users_count, type = "o", xlab = "Year", ylab = "Number of Users",
+         main = "User Growth Over Time", col = "blue", lwd = 2)
+  })
+}
+      # Dummy data for user locations
+      # Define user locations including 10 additional countries, including India
+      locations <- data.frame(
+        lat = c(40.7128, 34.0522, 37.7749,  # USA: New York, Los Angeles, San Francisco
+                41.8781, 29.7604, 39.9526,  # USA: Chicago, Houston, Philadelphia
+                33.4484, 35.6895, 32.7157,  # USA: Phoenix, Tokyo, San Diego
+                42.3601, 38.9072, 51.5074,  # USA: Boston, Washington D.C., London
+                52.5200, 48.8566, 53.3498,  # Germany: Berlin, France: Paris, Ireland: Dublin
+                55.7558, 59.3293, 60.1695,  # Russia: Moscow, Sweden: Stockholm, Finland: Helsinki
+                52.3676, 48.8566, 45.4215,  # Netherlands: Amsterdam, Poland: Warsaw, Italy: Milan
+                37.7749, 34.0522, 34.0522,  # USA: San Jose, Santa Monica, Hollywood
+                34.0522, 34.0522, 34.0522,  # USA: Beverly Hills, West Hollywood, Long Beach
+                34.0522, 34.0522, 34.0522,  # USA: Anaheim, Santa Ana, Irvine
+                34.0522, 34.0522, 34.0522,  # USA: Glendale, Pasadena, Burbank
+                34.0522, 34.0522, 34.0522,  # USA: Inglewood, Torrance, Culver City
+                34.0522, 34.0522, 34.0522,  # USA: Manhattan Beach, Redondo Beach, Marina del Rey
+                34.0522, 34.0522, 34.0522,  # USA: Hermosa Beach, Malibu, Venice
+                34.0522, 34.0522, 34.0522,  # USA: El Segundo, Calabasas, Westlake Village
+                34.0522, 34.0522, 34.0522,  # USA: Agoura Hills, Santa Clarita, Thousand Oaks
+                34.0522, 34.0522, 34.0522,  # USA: Simi Valley, Moorpark, Camarillo
+                19.0760,                       # India: Mumbai
+                51.1657, 35.6895, 46.2276,   # New Zealand: Wellington, Japan: Tokyo, Canada: Toronto
+                45.4215, 35.6895, 20.5937    # USA: Seattle, San Diego, India: New Delhi
+        ),
+        lon = c(-74.0060, -118.2437, -122.4194,  # USA: New York, Los Angeles, San Francisco
+                -87.6298, -95.3698, -75.1652,   # USA: Chicago, Houston, Philadelphia
+                -112.0740, 139.6917, -117.1611, # USA: Phoenix, Tokyo, San Diego
+                -71.0589, -77.0369, -0.1278,    # USA: Boston, Washington D.C., London
+                13.4050, 2.3522, -6.2603,       # Germany: Berlin, France: Paris, Ireland: Dublin
+                37.6173, 18.0686, 24.9384,      # Russia: Moscow, Sweden: Stockholm, Finland: Helsinki
+                4.9041, 2.3522, 9.1859,         # Netherlands: Amsterdam, Poland: Warsaw, Italy: Milan
+                -122.4194, -118.2437, -118.2437,# USA: San Jose, Santa Monica, Hollywood
+                -118.2437, -118.2437, -118.2437,# USA: Beverly Hills, West Hollywood, Long Beach
+                -118.2437, -118.2437, -118.2437,# USA: Anaheim, Santa Ana, Irvine
+                -118.2437, -118.2437, -118.2437,# USA: Glendale, Pasadena, Burbank
+                -118.2437, -118.2437, -118.2437,# USA: Inglewood, Torrance, Culver City
+                -118.2437, -118.2437, -118.2437,# USA: Manhattan Beach, Redondo Beach, Marina del Rey
+                -118.2437, -118.2437, -118.2437,# USA: Hermosa Beach, Malibu, Venice
+                -118.2437, -118.2437, -118.2437,# USA: El Segundo, Calabasas, Westlake Village
+                -118.2437, -118.2437, -118.2437,# USA: Agoura Hills, Santa Clarita, Thousand Oaks
+                -118.2437, -118.2437, -118.2437,# USA: Simi Valley, Moorpark, Camarillo
+                72.8777,                        # India: Mumbai
+                -0.1257, 139.6917, -79.3832,    # New Zealand: Wellington, Japan: Tokyo, Canada: Toronto
+                -75.6903, -78.9190, 78.9629     # USA: Seattle, San Diego, India: New Delhi
+        ),
+        name = c("New York", "Los Angeles", "San Francisco",  # USA
+                 "Chicago", "Houston", "Philadelphia",        # USA
+                 "Phoenix", "Tokyo", "San Diego",             # USA, Japan
+                 "Boston", "Washington D.C.", "London",       # USA, UK
+                 "Berlin", "Paris", "Dublin",                 # Germany, France, Ireland
+                 "Moscow", "Stockholm", "Helsinki",           # Russia, Sweden, Finland
+                 "Amsterdam", "Warsaw", "Milan",              # Netherlands, Poland, Italy
+                 "San Jose", "Santa Monica", "Hollywood",     # USA
+                 "Beverly Hills", "West Hollywood", "Long Beach",  # USA
+                 "Anaheim", "Santa Ana", "Irvine",            # USA
+                 "Glendale", "Pasadena", "Burbank",          # USA
+                 "Inglewood", "Torrance", "Culver City",     # USA
+                 "Manhattan Beach", "Redondo Beach", "Marina del Rey",  # USA
+                 "Hermosa Beach", "Malibu", "Venice",        # USA
+                 "El Segundo", "Calabasas", "Westlake Village",  # USA
+                 "Agoura Hills", "Santa Clarita", "Thousand Oaks",  # USA
+                 "Simi Valley", "Moorpark", "Camarillo",     # USA
+                 "Mumbai",                                  # India
+                 "Wellington", "Tokyo", "Toronto",          # New Zealand, Japan, Canada
+                 "Seattle", "San Diego", "New Delhi"        # USA, India
+        )
+      )
+      
+      
+      
+      
+    # Create leaflet map
+    leaflet() %>%
+      addTiles() %>%
+      addCircleMarkers(data = locations, ~lon, ~lat, color = "red", radius = 5) %>%
+      addControl(
+        html = "<h3 style='text-align:center;'>User Locations Across Different Countries</h3>",
+        position = "topright"
+      )
+  
+
+```
+#Connections Data:
+
+#Dummy data is generated for friends, mentors, and employers.
+#Each connection is represented as a text output (output$friend1, output$mentor2, etc.) containing the name of the connection along with their role.
+#Messages:
+
+#Dummy messages are generated from employers and mentors.
+#Messages include both positive and informational content, such as shortlisting notifications, requests for additional details, congratulations, feedback on resumes, and invitations for meetings.
+#Messages are represented as text outputs (output$employer_msg1, output$mentor_msg2, etc.) with specific content for each message.
+#Overall, this code simulates the presence of connections and messages within the application, providing users with a sense of interaction and engagement with other users, employers, and mentors
+
+#This code snippet defines the server logic for generating search results dynamically based on user input in a Shiny web application. It initializes a set of dummy search results, filters them based on the user's search query using case-insensitive pattern matching, and renders the filtered results in the UI. If no results are found, it displays a message indicating that no results were found.
+
+#This code defines the server logic for generating a user role distribution plot in a Shiny web application. It creates a plot illustrating the growth of users over time, utilizing dummy data for the number of users over a range of years. The plot function generates a line plot with years on the x-axis and user counts on the y-axis, with additional specifications for axis labels, plot title, line color, and line width. The resulting plot is rendered in the Shiny UI using renderPlot.
+#demonstarting user applicants in different countries.
+
+```{r}
+shinyApp(ui = tagList(ui, tags$style(css)), server = server)
+```
+#The shinyApp function is used to create a Shiny application, which consists of both user interface (UI) elements and server-side logic. In this code, ui represents the UI definition, tags$style(css) adds custom CSS styling to the UI, and server represents the server-side logic. These components are combined using tagList(ui, tags$style(css)) to ensure that the UI elements are styled according to the specified CSS rules. Finally, the server = server argument pairs the defined server logic with the UI, completing the setup of the Shiny application. When the shinyApp function is executed with these arguments, it launches the Shiny application with the specified UI and server logic.
+
+#Narrative and Summary:
+#Narrative:
+#The provided code constitutes a Shiny web application designed for user authentication and networking functionalities. It is structured to  enable users to log in, sign up, manage their profiles, connect with friends, mentors, and employers, exchange messages, search for companies or profiles, and apply for jobs. Despite its illustrative nature with dummy data, the application showcases a range of interactive UI elements and server-side logic to facilitate user interactions.
+
+#Summary:
+
+#The application revolves around user authentication and networking features.It encompasses functionalities for login, signup, profile management, connections, messaging, job search, and an "About Us" section.Dummy data is generated for connections, messages, search results, user role distribution plot, and user location map.The code employs reactive elements for dynamic UI updates based on user interactions.While functional for demonstration purposes, the application lacks real-world data integration, security measures, and scalability considerations
+
+#Github Repository details:
+https://github.com/vardhan2227/Student-mentor-Employer-App.git
+
